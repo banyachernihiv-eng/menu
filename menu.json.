@@ -1,0 +1,38 @@
+{
+  "categories": [
+    {
+      "id": "burgers",
+      "name": "Бургери"
+    },
+    {
+      "id": "snacks",
+      "name": "Снеки"
+    }
+  ],
+  "products": [
+    {
+      "id": 30,
+      "category": "burgers",
+      "name": "Бургер Класик",
+      "price": 160,
+      "description": "Соковита яловича котлета, томати, салат Айсберг, сир Чеддер, авторський соус.",
+      "imageUrl": "https://justburger.ps.me/wp-content/uploads/2023/10/classic.jpg"
+    },
+    {
+      "id": 54,
+      "category": "burgers",
+      "name": "Бургер BIG",
+      "price": 250,
+      "description": "Подвійна соковита котлета, карамелізована цибуля, подвійний сир Чеддер, соус BBQ.",
+      "imageUrl": "https://justburger.ps.me/wp-content/uploads/2023/10/bbq.jpg"
+    },
+    {
+      "id": 3,
+      "category": "snacks",
+      "name": "Картопля Фрі",
+      "price": 60,
+      "description": "Хрустка золотиста картопля, обсмажена у фритюрі, подається з сіллю.",
+      "imageUrl": "https://justburger.ps.me/wp-content/uploads/2023/10/fries.jpg"
+    }
+  ]
+}
