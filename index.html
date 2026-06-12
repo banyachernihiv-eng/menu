@@ -3,165 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JustBurger Меню</title>
-    <!-- Tailwind CSS для сучасного та красивого інтерфейсу -->
+    <title>Just Burger - Меню</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SDK Telegram WebApp (Обов'язково для зв'язку з ботом!) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Адаптація під кольорову тему Telegram */
-        body {
-            background-color: var(--tg-theme-bg-color, #1a1a1a);
-            color: var(--tg-theme-text-color, #ffffff);
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        .tg-button {
-            background-color: var(--tg-theme-button-color, #ffcc00);
-            color: var(--tg-theme-button-text-color, #000000);
-        }
-        .card-bg {
-            background-color: var(--tg-theme-secondary-bg-color, #2a2a2a);
-        }
+        body { background-color: #131313; color: #ffffff; font-family: sans-serif; }
+        .card-bg { background-color: #1e1e1e; }
+        .tg-button { background-color: #ffcc00; color: #000000; }
     </style>
 </head>
-<body class="p-4 pb-28">
-
-    <h1 class="text-2xl font-extrabold text-amber-500 text-center mb-6">🍔 Just Burger Menu 🍟</h1>
-    
-    <div id="menu-container" class="grid grid-cols-1 gap-4">
-        <!-- Бургер Класик -->
-        <div class="product-item card-bg rounded-2xl p-4 border border-zinc-800 flex justify-between items-center">
-            <div class="flex-1 pr-4">
-                <h3 class="text-lg font-bold text-white">Бургер Класик</h3>
-                <p class="text-xs text-zinc-400 mt-1">Соковита котлета, томати, сир Чеддер, фірмовий соус</p>
-                <div class="text-amber-500 font-extrabold mt-3">160 ₴</div>
-            </div>
-            <div id="controls-1" class="flex flex-col items-center gap-2">
-                <button class="tg-button px-4 py-1.5 rounded-lg text-xs font-bold transition active:scale-95" onclick="addToCart(1, 'Бургер Класик', 160)">Додати</button>
-            </div>
-        </div>
-
-        <!-- Бургер BBQ -->
-        <div class="product-item card-bg rounded-2xl p-4 border border-zinc-800 flex justify-between items-center">
-            <div class="flex-1 pr-4">
-                <h3 class="text-lg font-bold text-white">Бургер BBQ</h3>
-                <p class="text-xs text-zinc-400 mt-1">Бекон, хрустка цибуля, сир Чеддер, соус барбекю</p>
-                <div class="text-amber-500 font-extrabold mt-3">180 ₴</div>
-            </div>
-            <div id="controls-2" class="flex flex-col items-center gap-2">
-                <button class="tg-button px-4 py-1.5 rounded-lg text-xs font-bold transition active:scale-95" onclick="addToCart(2, 'Бургер BBQ', 180)">Додати</button>
-            </div>
-        </div>
-
-        <!-- Картопля Фрі -->
-        <div class="product-item card-bg rounded-2xl p-4 border border-zinc-800 flex justify-between items-center">
-            <div class="flex-1 pr-4">
-                <h3 class="text-lg font-bold text-white">Картопля Фрі</h3>
-                <p class="text-xs text-zinc-400 mt-1">Хрустка золотиста картопля з сіллю</p>
-                <div class="text-amber-500 font-extrabold mt-3">60 ₴</div>
-            </div>
-            <div id="controls-3" class="flex flex-col items-center gap-2">
-                <button class="tg-button px-4 py-1.5 rounded-lg text-xs font-bold transition active:scale-95" onclick="addToCart(3, 'Картопля Фрі', 60)">Додати</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Фіксована панель кошика знизу -->
-    <div class="fixed bottom-0 left-0 right-0 p-4 card-bg border-t border-zinc-800 rounded-t-3xl shadow-2xl z-45">
+<body class="p-4 pb-32">
+    <h1 class="text-3xl font-black text-amber-500 text-center my-6">JUST BURGER</h1>
+    <div id="menu-container" class="grid grid-cols-1 gap-4 max-w-md mx-auto"></div>
+    <div class="fixed bottom-0 left-0 right-0 p-4 card-bg border-t border-zinc-800 shadow-2xl z-50">
         <div class="max-w-md mx-auto flex items-center justify-between">
             <div>
-                <div class="text-xs text-zinc-400">Разом:</div>
-                <div class="text-xl font-black text-amber-500"><span id="cart-total">0</span> ₴</div>
+                <div class="text-xs text-zinc-400">Всього:</div>
+                <div class="text-2xl font-black text-amber-500"><span id="cart-total">0</span> ₴</div>
             </div>
-            <button class="bg-green-600 text-white px-6 py-3 rounded-xl text-sm font-extrabold transition active:scale-95" onclick="sendOrder()">Оформити замовлення</button>
+            <button class="bg-green-600 text-white px-8 py-3 rounded-xl font-black" onclick="alert('Замовлення оформлено!')">Оформити</button>
         </div>
     </div>
-
     <script>
-        let tg = window.Telegram.WebApp;
-        if (tg) {
-            tg.ready();
-            tg.expand(); // Розгортаємо вікно на максимум в Telegram
-        }
-
-        let cart = {};
-
-        function addToCart(id, name, price) {
-            cart[id] = { name: name, price: price, count: 1 };
-            updateUI(id);
-        }
-
-        function changeCount(id, delta) {
-            if (!cart[id]) return;
-            cart[id].count += delta;
-            if (cart[id].count <= 0) {
-                delete cart[id];
-                resetUI(id);
-            } else {
-                updateUI(id);
-            }
-        }
-
-        function updateUI(id) {
-            const controls = document.getElementById(`controls-${id}`);
-            controls.innerHTML = `
-                <div class="flex items-center gap-2 bg-zinc-800 rounded-lg p-1">
-                    <button class="w-8 h-8 flex items-center justify-center bg-zinc-700 text-white rounded font-bold" onclick="changeCount(${id}, -1)">-</button>
-                    <span class="px-2 font-bold">${cart[id].count}</span>
-                    <button class="w-8 h-8 flex items-center justify-center bg-zinc-700 text-white rounded font-bold" onclick="changeCount(${id}, 1)">+</button>
+        const MENU_ITEMS = [
+            { id: 1, name: "Бургер Класик", price: 160, description: "Яловича котлета, томати, салат, сир Чеддер.", imageUrl: "https://justburger.ps.me/wp-content/uploads/2023/10/classic.jpg" },
+            { id: 2, name: "Бургер BBQ", price: 180, description: "Бекон, цибуля, сир Чеддер, соус барбекю.", imageUrl: "https://justburger.ps.me/wp-content/uploads/2023/10/bbq.jpg" },
+            { id: 3, name: "Картопля Фрі", price: 60, description: "Хрустка золотиста картопля з сіллю.", imageUrl: "https://justburger.ps.me/wp-content/uploads/2023/10/fries.jpg" }
+        ];
+        const container = document.getElementById('menu-container');
+        container.innerHTML = MENU_ITEMS.map(item => `
+            <div class="card-bg rounded-2xl p-3 flex items-center gap-4 border border-zinc-800">
+                <img src="${item.imageUrl}" class="w-20 h-20 rounded-lg object-cover bg-zinc-900" onerror="this.src='https://placehold.co/80x80?text=JustBurger'">
+                <div class="flex-1">
+                    <h3 class="font-bold">${item.name}</h3>
+                    <p class="text-xs text-zinc-400">${item.description}</p>
+                    <div class="text-amber-500 font-bold mt-1">${item.price} ₴</div>
                 </div>
-            `;
-            calculateTotal();
-        }
-
-        function resetUI(id) {
-            const controls = document.getElementById(`controls-${id}`);
-            let name = '', price = 0;
-            if (id === 1) { name = 'Бургер Класик'; price = 160; }
-            if (id === 2) { name = 'Бургер BBQ'; price = 180; }
-            if (id === 3) { name = 'Картопля Фрі'; price = 60; }
-            
-            controls.innerHTML = `<button class="tg-button px-4 py-1.5 rounded-lg text-xs font-bold transition active:scale-95" onclick="addToCart(${id}, '${name}', ${price})">Додати</button>`;
-            calculateTotal();
-        }
-
-        function calculateTotal() {
-            let total = 0;
-            for (let id in cart) {
-                total += cart[id].price * cart[id].count;
-            }
-            document.getElementById('cart-total').innerText = total;
-        }
-
-        function sendOrder() {
-            let total = 0;
-            let items = [];
-            for (let id in cart) {
-                total += cart[id].price * cart[id].count;
-                items.push(cart[id]);
-            }
-
-            if (total === 0) {
-                alert('Кошик порожній!');
-                return;
-            }
-
-            // Формуємо дані для Make.com
-            let orderData = {
-                total_amount: total,
-                items: items,
-                user_id: tg.initDataUnsafe?.user?.id || 0,
-                username: tg.initDataUnsafe?.user?.username || 'Guest'
-            };
-
-            // Надсилаємо дані в бот через tg.sendData
-            if (tg) {
-                tg.sendData(JSON.stringify(orderData));
-                tg.close();
-            } else {
-                alert('Замовлення оформлено! Сума: ' + total + ' ₴');
-            }
-        }
+                <button class="tg-button px-4 py-2 rounded-lg font-bold text-sm" onclick="alert('Додано ${item.name}')">Додати</button>
+            </div>
+        `).join('');
     </script>
 </body>
 </html>
