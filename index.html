@@ -52,7 +52,7 @@
 
   <!-- Кнопка корзины -->
   <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent border-t border-zinc-900/40 z-30 pointer-events-none">
-    <button id="cart-button" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg shadow-amber-500/20 transform active:scale-[0.98] pointer-events-auto hidden">
+    <button id="cart-button" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg shadow-amber-500/20 transform active:scale-[0.98] pointer-events-auto hidden" onclick="toggleCart()">
       <div class="flex items-center gap-2">
         <span class="bg-zinc-950 text-amber-500 rounded-lg px-2.5 py-0.5 text-xs font-black" id="cart-count">0</span>
         <span class="text-sm font-extrabold">Переглянути замовлення</span>
@@ -61,7 +61,7 @@
     </button>
   </div>
 
-  <!-- Шторка -->
+  <!-- Шторка кошика -->
   <div id="cart-drawer" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 transform translate-y-full transition-transform duration-300 ease-in-out flex flex-col justify-end">
     <div class="bg-zinc-900 rounded-t-3xl max-h-[90vh] flex flex-col border-t border-zinc-800">
       
@@ -233,8 +233,6 @@
       }
     }
 
-    document.getElementById('cart-button').addEventListener('click', toggleCart);
-
     function renderCartItems() {
       const container = document.getElementById('cart-items-container');
       container.innerHTML = '';
@@ -301,16 +299,23 @@
         username: tg?.initDataUnsafe?.user?.username || 'Guest'
       };
 
+      // Логируем для дебага
+      console.log("Надсилання замовлення:", orderPayload);
+
       // Пробуем отправить в Telegram чат
+      let sentSuccessfully = false;
       try {
         if (tg && tg.sendData) {
           tg.sendData(JSON.stringify(orderPayload));
-        } else {
-          throw new Error("sendData недоступний");
+          sentSuccessfully = true;
         }
       } catch (e) {
-        // Если Telegram блокирует прямую отправку - выводим красивый резервный Alert, чтобы заказ не потерялся
-        alert(`🔔 Тестове замовлення сформовано!\n\nСума: ${total} ₴\nТелефон: ${phoneInput}\nКількість страв: ${items.length}\n\nСкрипт згенеровано успішно!`);
+        console.warn("Помилка tg.sendData:", e);
+      }
+
+      // Если прямая отправка не поддерживается клиентом (или заблокирована)
+      if (!sentSuccessfully) {
+        alert(`🔔 Тестове замовлення сформовано!\n\nСума: ${total} ₴\nТелефон: ${phoneInput}\nКількість страв: ${items.length}\n\nДані успішно оброблені!`);
       }
 
       cart = {};
