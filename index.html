@@ -28,6 +28,15 @@
 </head>
 <body class="bg-zinc-950 text-gray-100 flex flex-col h-full overflow-hidden select-none">
 
+  <!-- ВБУДОВАНА ПАНЕЛЬ НАЛАГОДЖЕННЯ (Показує помилки прямо на екрані телефону) -->
+  <div id="debug-panel" class="bg-red-950/80 border-b border-red-800 px-4 py-2 text-[10px] font-mono text-red-200 hidden z-[200]">
+    <div class="flex justify-between items-center mb-1">
+      <span class="font-bold text-red-400">⚠️ Системний лог помилок:</span>
+      <button onclick="document.getElementById('debug-panel').classList.add('hidden')" class="text-white bg-red-800 px-1.5 py-0.5 rounded text-[8px]">Сховати</button>
+    </div>
+    <div id="debug-logs-container" class="max-h-20 overflow-y-auto space-y-1"></div>
+  </div>
+
   <!-- Шапка меню -->
   <header class="bg-zinc-900 border-b border-zinc-800 px-4 py-4 flex items-center justify-between sticky top-0 z-40 shrink-0">
     <div class="flex items-center gap-3">
@@ -121,15 +130,39 @@
   </div>
 
   <script>
+    // Функція безпечного запису логів на екран
+    function logDebug(message) {
+      console.log("[DEBUG]", message);
+      const panel = document.getElementById('debug-panel');
+      const container = document.getElementById('debug-logs-container');
+      if (panel && container) {
+        panel.classList.remove('hidden');
+        const logLine = document.createElement('div');
+        logLine.className = 'border-b border-red-900/30 pb-0.5';
+        logLine.innerText = `> ${message}`;
+        container.appendChild(logLine);
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    // Перехоплюємо глобальні помилки скрипта
+    window.onerror = function(message, source, lineno, colno, error) {
+      logDebug(`Критична помилка JS: ${message} (Рядок: ${lineno})`);
+      return false;
+    };
+
     let tg = null;
     try {
       if (window.Telegram && window.Telegram.WebApp) {
         tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
+        logDebug("Telegram WebApp SDK успішно ініціалізовано.");
+      } else {
+        logDebug("Telegram SDK не знайдено (запуск у звичайному браузері).");
       }
     } catch (e) {
-      console.error("Помилка ініціалізації Telegram SDK:", e);
+      logDebug("Помилка ініціалізації SDK: " + e.message);
     }
 
     const menuData = [
@@ -166,47 +199,51 @@
     let cart = {};
 
     function renderMenu() {
-      const grid = document.getElementById('menu-grid');
-      grid.innerHTML = '';
+      try {
+        const grid = document.getElementById('menu-grid');
+        grid.innerHTML = '';
 
-      menuData.forEach(item => {
-        const count = cart[item.id] || 0;
-        const card = document.createElement('div');
-        card.className = 'bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md flex flex-col';
-        card.innerHTML = `
-          <div class="relative w-full aspect-[4/3] bg-zinc-950 flex items-center justify-center overflow-hidden">
-            <img src="${item.image}" alt="${item.name}" class="object-contain w-full h-full p-2 transition-transform duration-500 hover:scale-105" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%2318181b%22/><text x=%2250%25%22 y=%2250%25%22 font-size=%2240%22 text-anchor=%22middle%22 dy=%22.3em%22>🍔</text></svg>'"/>
-          </div>
-          <div class="p-4 flex-1 flex flex-col justify-between">
-            <div class="space-y-1">
-              <div class="flex justify-between items-start gap-2">
-                <h2 class="font-bold text-base text-gray-100 leading-tight">${item.name}</h2>
-                <span class="text-sm font-black text-amber-500 whitespace-nowrap">${item.price} ₴</span>
-              </div>
-              <p class="text-[11px] text-zinc-400 leading-relaxed">${item.desc}</p>
+        menuData.forEach(item => {
+          const count = cart[item.id] || 0;
+          const card = document.createElement('div');
+          card.className = 'bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md flex flex-col';
+          card.innerHTML = `
+            <div class="relative w-full aspect-[4/3] bg-zinc-950 flex items-center justify-center overflow-hidden">
+              <img src="${item.image}" alt="${item.name}" class="object-contain w-full h-full p-2 transition-transform duration-500 hover:scale-105" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%2318181b%22/><text x=%2250%25%22 y=%2250%25%22 font-size=%2240%22 text-anchor=%22middle%22 dy=%22.3em%22>🍔</text></svg>'"/>
             </div>
-            <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between">
-              <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Ціна за одиницю</span>
-              <div class="flex items-center">
-                ${count === 0 ? `
-                  <button onclick="addToCart(${item.id})" class="tg-button hover:bg-amber-400 active:scale-95 transition-all text-zinc-950 font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5">
-                    <span>Додати</span>
-                    <span class="text-sm font-extrabold">+</span>
-                  </button>
-                ` : `
-                  <div class="bg-zinc-800 border border-zinc-700 rounded-xl flex items-center p-1 overflow-hidden">
-                    <button onclick="removeFromCart(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-zinc-700 active:scale-90 transition font-black text-sm">-</button>
-                    <span class="px-3 text-xs font-bold text-gray-200 min-w-[28px] text-center">${count}</span>
-                    <button onclick="addToCart(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-amber-500 hover:bg-zinc-700 active:scale-90 transition font-black text-sm">+</button>
-                  </div>
-                `}
+            <div class="p-4 flex-1 flex flex-col justify-between">
+              <div class="space-y-1">
+                <div class="flex justify-between items-start gap-2">
+                  <h2 class="font-bold text-base text-gray-100 leading-tight">${item.name}</h2>
+                  <span class="text-sm font-black text-amber-500 whitespace-nowrap">${item.price} ₴</span>
+                </div>
+                <p class="text-[11px] text-zinc-400 leading-relaxed">${item.desc}</p>
+              </div>
+              <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between">
+                <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Ціна за одиницю</span>
+                <div class="flex items-center">
+                  ${count === 0 ? `
+                    <button onclick="addToCart(${item.id})" class="tg-button hover:bg-amber-400 active:scale-95 transition-all text-zinc-950 font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5">
+                      <span>Додати</span>
+                      <span class="text-sm font-extrabold">+</span>
+                    </button>
+                  ` : `
+                    <div class="bg-zinc-800 border border-zinc-700 rounded-xl flex items-center p-1 overflow-hidden">
+                      <button onclick="removeFromCart(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-zinc-700 active:scale-90 transition font-black text-sm">-</button>
+                      <span class="px-3 text-xs font-bold text-gray-200 min-w-[28px] text-center">${count}</span>
+                      <button onclick="addToCart(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-amber-500 hover:bg-zinc-700 active:scale-90 transition font-black text-sm">+</button>
+                    </div>
+                  `}
+                </div>
               </div>
             </div>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-      updateCartUI();
+          `;
+          grid.appendChild(card);
+        });
+        updateCartUI();
+      } catch (e) {
+        logDebug("Помилка рендерингу меню: " + e.message);
+      }
     }
 
     function addToCart(id) {
@@ -297,83 +334,116 @@
       }
     }
 
+    // Запуск оформлення замовлення (Захищений Master-метод)
     function sendOrderToPoster() {
-      const phoneInput = document.getElementById('cust-phone').value.trim();
-      if (!phoneInput) {
-        showValidationTip("Будь ласка, введіть ваш номер телефону.");
-        return;
-      }
-
-      let total = 0;
-      let items = [];
-      Object.keys(cart).forEach(id => {
-        const item = menuData.find(m => m.id == id);
-        if (item) {
-          total += item.price * cart[id];
-          items.push({
-            product_id: item.id,
-            name: item.name,
-            price: item.price,
-            count: cart[id]
-          });
-        }
-      });
-
-      if (items.length === 0) {
-        showValidationTip("Кошик порожній!");
-        return;
-      }
-
-      let userId = 0;
-      let username = 'Guest';
       try {
-        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-          userId = tg.initDataUnsafe.user.id || 0;
-          username = tg.initDataUnsafe.user.username || 'Guest';
+        logDebug("Запуск оформлення замовлення...");
+        
+        const phoneInput = document.getElementById('cust-phone').value.trim();
+        if (!phoneInput) {
+          showValidationTip("Будь ласка, введіть ваш номер телефону.");
+          return;
         }
-      } catch (e) {
-        console.warn("Не вдалося зчитати дані Telegram користувача:", e);
-      }
 
-      const orderPayload = {
-        total_amount: total,
-        phone: phoneInput,
-        items: items,
-        user_id: userId,
-        username: username
-      };
+        let total = 0;
+        let items = [];
+        Object.keys(cart).forEach(id => {
+          const item = menuData.find(m => m.id == id);
+          if (item) {
+            total += item.price * cart[id];
+            items.push({
+              product_id: item.id,
+              name: item.name,
+              price: item.price,
+              count: cart[id]
+            });
+          }
+        });
 
-      console.log("Надсилання замовлення:", orderPayload);
-
-      // Пробуємо надіслати дані у бот
-      try {
-        if (tg && tg.sendData) {
-          tg.sendData(JSON.stringify(orderPayload));
+        if (items.length === 0) {
+          showValidationTip("Кошик порожній!");
+          logDebug("Спроба відправити порожній кошик відхилена.");
+          return;
         }
-      } catch (e) {
-        console.warn("tg.sendData заблоковано або недоступно:", e);
+
+        let userId = 0;
+        let username = 'Guest';
+        try {
+          if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            userId = tg.initDataUnsafe.user.id || 0;
+            username = tg.initDataUnsafe.user.username || 'Guest';
+          }
+        } catch (e) {
+          logDebug("Не вдалося зчитати дані користувача TG: " + e.message);
+        }
+
+        const orderPayload = {
+          total_amount: total,
+          phone: phoneInput,
+          items: items,
+          user_id: userId,
+          username: username
+        };
+
+        logDebug("Сформовано JSON-пакет замовлення: " + JSON.stringify(orderPayload));
+
+        // Спроба відправити дані назад у Telegram-бот
+        let sentSuccessfully = false;
+        try {
+          if (tg && tg.sendData) {
+            logDebug("Виклик tg.sendData...");
+            tg.sendData(JSON.stringify(orderPayload));
+            sentSuccessfully = true;
+            logDebug("Дані успішно передано до tg.sendData!");
+          } else {
+            logDebug("tg.sendData недоступний (Web App запущено не як клавіатурна кнопка).");
+          }
+        } catch (e) {
+          logDebug("Збій tg.sendData (перехоплено): " + e.message);
+        }
+
+        // Відображаємо кастомне вікно успіху
+        const modalPhone = document.getElementById('modal-phone-val');
+        const modalTotal = document.getElementById('modal-total-val');
+        const modalText = document.getElementById('modal-success-text');
+        const modal = document.getElementById('custom-success-modal');
+
+        if (modalPhone) modalPhone.innerText = phoneInput;
+        if (modalTotal) modalTotal.innerText = `${total} ₴`;
+        
+        const countLabel = items.length === 1 ? '1 страва' : `${items.length} страви/а`;
+        if (modalText) {
+          modalText.innerHTML = `Тестове замовлення (${countLabel}) успішно сформоване!<br>Дані готові для передачі на кухню.`;
+        }
+
+        if (modal) {
+          modal.classList.remove('hidden');
+          logDebug("Кастомне вікно успіху виведено на екран.");
+        }
+
+        // Очищаємо кошик ТІЛЬКИ ПІСЛЯ успішного формування замовлення
+        cart = {};
+        renderMenu();
+        
+        const drawer = document.getElementById('cart-drawer');
+        if (drawer) {
+          drawer.classList.add('translate-y-full');
+        }
+
+      } catch (masterError) {
+        logDebug("Критичний збій методу sendOrderToPoster: " + masterError.message);
+        alert("Помилка виконання скрипта: " + masterError.message);
       }
-
-      // ГАРАНТОВАНО відкриваємо наше кастомне HTML-вікно успіху
-      document.getElementById('modal-phone-val').innerText = phoneInput;
-      document.getElementById('modal-total-val').innerText = `${total} ₴`;
-      
-      const countLabel = items.length === 1 ? '1 страва' : `${items.length} страви/а`;
-      document.getElementById('modal-success-text').innerHTML = `Тестове замовлення (${countLabel}) успішно сформоване!<br>Дані готові для передачі на кухню.`;
-      
-      // Показуємо модальне вікно
-      document.getElementById('custom-success-modal').classList.remove('hidden');
-
-      // Закриваємо шторку кошика та чистимо кошик
-      cart = {};
-      renderMenu();
-      document.getElementById('cart-drawer').classList.add('translate-y-full');
     }
 
     function closeSuccessModal() {
       document.getElementById('custom-success-modal').classList.add('hidden');
       if (tg) {
-        tg.close(); // Закриваємо Web App після ознайомлення
+        try {
+          tg.close(); // Закриваємо Web App після ознайомлення
+        } catch (e) {
+          logDebug("Не вдалося закрити Web App: " + e.message);
+        }
       }
     }
 
@@ -383,7 +453,7 @@
 
       const tip = document.createElement('div');
       tip.id = 'val-tip';
-      tip.className = 'fixed top-16 left-4 right-4 bg-red-600 text-white font-semibold text-xs px-4 py-3 rounded-xl shadow-lg z-[60] text-center';
+      tip.className = 'fixed top-16 left-4 right-4 bg-red-600 text-white font-semibold text-xs px-4 py-3 rounded-xl shadow-lg z-[150] text-center';
       tip.innerText = message;
       document.body.appendChild(tip);
 
