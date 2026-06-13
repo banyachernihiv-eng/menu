@@ -3,36 +3,40 @@
     {
       "id": "burgers",
       "name": "Бургери"
-    },
-    {
-      "id": "snacks",
-      "name": "Снеки"
     }
   ],
   "products": [
     {
-      "id": 30,
-      "category": "burgers",
-      "name": "Бургер Класик",
-      "price": 160,
-      "description": "Соковита яловича котлета, томати, салат Айсберг, сир Чеддер, авторський соус.",
-      "imageUrl": "https://justburger.ps.me/wp-content/uploads/2023/10/classic.jpg"
-    },
-    {
       "id": 54,
       "category": "burgers",
-      "name": "Бургер BIG",
-      "price": 250,
-      "description": "Подвійна соковита котлета, карамелізована цибуля, подвійний сир Чеддер, соус BBQ.",
-      "imageUrl": "https://justburger.ps.me/wp-content/uploads/2023/10/bbq.jpg"
+      "name": "Burger Big",
+      "price": 395,
+      "description": "Подвійна порція смаку для справжніх гурманів! Дві соковиті котлети з яловичини, хрусткий бекон, свіжі томати, листя салату та розплавлений сир Чеддер.",
+      "imageUrl": "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/e64604c7-4e41-4bfd-810e-734aadf8bd03_image.png"
     },
     {
-      "id": 3,
-      "category": "snacks",
-      "name": "Картопля Фрі",
-      "price": 60,
-      "description": "Хрустка золотиста картопля, обсмажена у фритюрі, подається з сіллю.",
-      "imageUrl": "https://justburger.ps.me/wp-content/uploads/2023/10/fries.jpg"
+      "id": 55,
+      "category": "burgers",
+      "name": "Burger Jack",
+      "price": 298,
+      "description": "Глибокий, насичений смак! Повітряна булочка бріош, фірмовий соус Jack Daniel's, хрустка цибуля та карамелізований бекон.",
+      "imageUrl": "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/10ffa961-88af-4d02-b9fb-ecbbd49f96e2_image.png"
+    },
+    {
+      "id": 56,
+      "category": "burgers",
+      "name": "Burger Black (spicy)",
+      "price": 265,
+      "description": "Справжній вибух смаку! Фірмова чорна булочка, гострий соус халапеньо, свіжі овочі та розплавлений Чеддер для справжньої гостроти.",
+      "imageUrl": "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/b7446fd4-5bca-4d12-ae33-3102784b93a2_image.jpeg"
+    },
+    {
+      "id": 30,
+      "category": "burgers",
+      "name": "Burger Classic",
+      "price": 248,
+      "description": "Ніжний та насичений! Повітряна булочка бріош, класична соковита котлета з індички, соус тар-тар та свіжий лист салату.",
+      "imageUrl": "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/fff41153-4f5a-44e5-bfd9-01f16f089fef_image.png"
     }
   ]
 }
