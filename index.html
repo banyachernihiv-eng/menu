@@ -28,7 +28,7 @@
 </head>
 <body class="bg-zinc-950 text-gray-100 flex flex-col h-full overflow-hidden select-none">
 
-  <!-- Шапка -->
+  <!-- Шапка меню -->
   <header class="bg-zinc-900 border-b border-zinc-800 px-4 py-4 flex items-center justify-between sticky top-0 z-40 shrink-0">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500 font-bold text-xl">
@@ -45,12 +45,12 @@
     </div>
   </header>
 
-  <!-- Список -->
+  <!-- Список бургерів -->
   <main class="flex-1 overflow-y-auto px-4 py-4 pb-28 space-y-4">
     <div class="grid grid-cols-1 gap-4" id="menu-grid"></div>
   </main>
 
-  <!-- Кнопка корзины -->
+  <!-- Кнопка кошика внизу -->
   <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent border-t border-zinc-900/40 z-30 pointer-events-none">
     <button id="cart-button" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg shadow-amber-500/20 transform active:scale-[0.98] pointer-events-auto hidden" onclick="toggleCart()">
       <div class="flex items-center gap-2">
@@ -97,8 +97,30 @@
     </div>
   </div>
 
+  <!-- ВЛАСНЕ СТИЛЬНЕ ВІКНО УСПІХУ (Не заблокується жодним додатком) -->
+  <div id="custom-success-modal" class="fixed inset-0 bg-zinc-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 hidden">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 max-w-sm w-full text-center space-y-5 shadow-2xl">
+      <div class="w-16 h-16 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full flex items-center justify-center text-3xl mx-auto">
+        ✓
+      </div>
+      <div>
+        <h3 class="text-lg font-black text-gray-100 mb-1">Замовлення сформовано!</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed" id="modal-success-text">
+          Дані успішно оброблені та готові для відправки.
+        </p>
+      </div>
+      <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 text-left space-y-2 text-xs text-zinc-300">
+        <div class="flex justify-between"><span class="text-zinc-500">Номер телефону:</span> <span id="modal-phone-val" class="font-bold"></span></div>
+        <div class="flex justify-between"><span class="text-zinc-500">Сума до сплати:</span> <span id="modal-total-val" class="font-extrabold text-amber-500"></span></div>
+        <div class="flex justify-between"><span class="text-zinc-500">Статус:</span> <span class="text-green-400 font-bold">Очікує каси Poster</span></div>
+      </div>
+      <button onclick="closeSuccessModal()" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 py-3 rounded-xl text-sm font-black transition active:scale-95">
+        Зрозуміло
+      </button>
+    </div>
+  </div>
+
   <script>
-    // Пробуем безопасно инициализировать Telegram WebApp SDK
     let tg = null;
     try {
       if (window.Telegram && window.Telegram.WebApp) {
@@ -110,7 +132,6 @@
       console.error("Помилка ініціалізації Telegram SDK:", e);
     }
 
-    // Исходная глобальная база данных меню
     const menuData = [
       {
         id: 54,
@@ -303,7 +324,6 @@
         return;
       }
 
-      // Безопасное чтение данных пользователя Telegram
       let userId = 0;
       let username = 'Guest';
       try {
@@ -323,29 +343,38 @@
         username: username
       };
 
-      // Логируем для отладки
       console.log("Надсилання замовлення:", orderPayload);
 
-      // Пробуем отправить в Telegram чат
-      let sentSuccessfully = false;
+      // Пробуємо надіслати дані у бот
       try {
         if (tg && tg.sendData) {
           tg.sendData(JSON.stringify(orderPayload));
-          sentSuccessfully = true;
         }
       } catch (e) {
-        console.warn("tg.sendData недоступний або заблокований:", e);
+        console.warn("tg.sendData заблоковано або недоступно:", e);
       }
 
-      // Если tg.sendData заблокирован, ГАРАНТИРОВАННО выводим кастомный Alert!
-      if (!sentSuccessfully) {
-        alert(`🔔 Тестове замовлення сформовано!\n\nСума: ${total} ₴\nТелефон: ${phoneInput}\nКількість страв: ${items.length}\n\nДані успішно оброблені!`);
-      }
+      // ГАРАНТОВАНО відкриваємо наше кастомне HTML-вікно успіху
+      document.getElementById('modal-phone-val').innerText = phoneInput;
+      document.getElementById('modal-total-val').innerText = `${total} ₴`;
+      
+      const countLabel = items.length === 1 ? '1 страва' : `${items.length} страви/а`;
+      document.getElementById('modal-success-text').innerHTML = `Тестове замовлення (${countLabel}) успішно сформоване!<br>Дані готові для передачі на кухню.`;
+      
+      // Показуємо модальне вікно
+      document.getElementById('custom-success-modal').classList.remove('hidden');
 
-      // Сбрасываем корзину и закрываем шторку
+      // Закриваємо шторку кошика та чистимо кошик
       cart = {};
       renderMenu();
-      toggleCart();
+      document.getElementById('cart-drawer').classList.add('translate-y-full');
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('custom-success-modal').classList.add('hidden');
+      if (tg) {
+        tg.close(); // Закриваємо Web App після ознайомлення
+      }
     }
 
     function showValidationTip(message) {
