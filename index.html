@@ -1,47 +1,368 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="uk" class="h-full">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Just Burger - Меню</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body { background-color: #131313; color: #ffffff; font-family: sans-serif; }
-        .card-bg { background-color: #1e1e1e; }
-        .tg-button { background-color: #ffcc00; color: #000000; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Just Burger - Меню</title>
+  <!-- Подключение стилей Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Подключение Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Подключение шрифта Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .card-bg { background-color: #1e1e1e; }
+    .tg-button { background-color: #ffcc00; color: #000000; }
+    /* Скрытие стандартного скроллбара для красивого мобильного вида */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+    }
+  </style>
 </head>
-<body class="p-4 pb-32">
-    <h1 class="text-3xl font-black text-amber-500 text-center my-6">JUST BURGER</h1>
-    <div id="menu-container" class="grid grid-cols-1 gap-4 max-w-md mx-auto"></div>
-    <div class="fixed bottom-0 left-0 right-0 p-4 card-bg border-t border-zinc-800 shadow-2xl z-50">
-        <div class="max-w-md mx-auto flex items-center justify-between">
-            <div>
-                <div class="text-xs text-zinc-400">Всього:</div>
-                <div class="text-2xl font-black text-amber-500"><span id="cart-total">0</span> ₴</div>
-            </div>
-            <button class="bg-green-600 text-white px-8 py-3 rounded-xl font-black" onclick="alert('Замовлення оформлено!')">Оформити</button>
-        </div>
+<body class="bg-zinc-950 text-gray-100 flex flex-col h-full overflow-hidden select-none">
+
+  <!-- Шапка приложения -->
+  <header class="bg-zinc-900 border-b border-zinc-800 px-4 py-4 flex items-center justify-between sticky top-0 z-40 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500 font-bold text-xl">
+        🍔
+      </div>
+      <div>
+        <h1 class="font-black text-sm tracking-wider text-amber-500 uppercase">JUST BURGER</h1>
+        <p class="text-[10px] text-zinc-400 uppercase tracking-widest">Premium Street Food</p>
+      </div>
     </div>
-    <script>
-        const MENU_ITEMS = [
-            { id: 1, name: "Бургер Класик", price: 160, description: "Яловича котлета, томати, салат, сир Чеддер.", imageUrl: "https://justburger.ps.me/wp-content/uploads/2023/10/classic.jpg" },
-            { id: 2, name: "Бургер BBQ", price: 180, description: "Бекон, цибуля, сир Чеддер, соус барбекю.", imageUrl: "https://justburger.ps.me/wp-content/uploads/2023/10/bbq.jpg" },
-            { id: 3, name: "Картопля Фрі", price: 60, description: "Хрустка золотиста картопля з сіллю.", imageUrl: "https://justburger.ps.me/wp-content/uploads/2023/10/fries.jpg" }
-        ];
-        const container = document.getElementById('menu-container');
-        container.innerHTML = MENU_ITEMS.map(item => `
-            <div class="card-bg rounded-2xl p-3 flex items-center gap-4 border border-zinc-800">
-                <img src="${item.imageUrl}" class="w-20 h-20 rounded-lg object-cover bg-zinc-900" onerror="this.src='https://placehold.co/80x80?text=JustBurger'">
-                <div class="flex-1">
-                    <h3 class="font-bold">${item.name}</h3>
-                    <p class="text-xs text-zinc-400">${item.description}</p>
-                    <div class="text-amber-500 font-bold mt-1">${item.price} ₴</div>
-                </div>
-                <button class="tg-button px-4 py-2 rounded-lg font-bold text-sm" onclick="alert('Додано ${item.name}')">Додати</button>
+    <div class="bg-zinc-800 text-amber-500 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border border-zinc-700">
+      <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+      Тест каси
+    </div>
+  </header>
+
+  <!-- Список бургеров -->
+  <main class="flex-1 overflow-y-auto px-4 py-4 pb-28 space-y-4">
+    <div class="grid grid-cols-1 gap-4" id="menu-grid">
+      <!-- Сюда JavaScript добавит карточки товаров -->
+    </div>
+  </main>
+
+  <!-- Фиксированная кнопка корзины внизу страницы -->
+  <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent border-t border-zinc-900/40 z-30 pointer-events-none">
+    <button id="cart-button" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg shadow-amber-500/20 transform active:scale-[0.98] pointer-events-auto hidden">
+      <div class="flex items-center gap-2">
+        <span class="bg-zinc-950 text-amber-500 rounded-lg px-2.5 py-0.5 text-xs font-black" id="cart-count">0</span>
+        <span class="text-sm font-extrabold">Переглянути замовлення</span>
+      </div>
+      <span class="text-sm font-black" id="cart-total">0 ₴</span>
+    </button>
+  </div>
+
+  <!-- Шторка корзины (Оформление заказа) -->
+  <div id="cart-drawer" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 transform translate-y-full transition-transform duration-300 ease-in-out flex flex-col justify-end">
+    <div class="bg-zinc-900 rounded-t-3xl max-h-[90vh] flex flex-col border-t border-zinc-800">
+      
+      <!-- Шапка шторки -->
+      <div class="px-5 py-4 border-b border-zinc-800 flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-bold text-gray-100 flex items-center gap-2">
+            🛒 Твій кошик
+          </h2>
+          <p class="text-xs text-zinc-400">Перевір вибрані позиції</p>
+        </div>
+        <button onclick="toggleCart()" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition">
+          ✕
+        </button>
+      </div>
+
+      <!-- Товары в корзине -->
+      <div class="p-5 overflow-y-auto space-y-4 max-h-[40vh]" id="cart-items-container">
+        <!-- Сюда добавляются выбранные товары -->
+      </div>
+
+      <!-- Поле ввода телефона для интеграции с Poster -->
+      <div class="p-5 bg-zinc-950/40 border-t border-b border-zinc-800/60 space-y-3">
+        <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Дані для відправки в касу</h3>
+        <input type="tel" id="cust-phone" placeholder="Введіть ваш номер телефону" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition">
+      </div>
+
+      <!-- Итог и кнопка отправки заказа -->
+      <div class="p-5 space-y-4 bg-zinc-900">
+        <div class="flex justify-between items-center">
+          <span class="text-zinc-400 text-sm">Всього до сплати:</span>
+          <span class="text-xl font-black text-amber-500" id="drawer-total">0 ₴</span>
+        </div>
+        <button onclick="sendOrderToPoster()" class="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-2xl transition duration-300 shadow-md flex items-center justify-center gap-2 active:scale-95">
+          <span>Надіслати замовлення</span>
+          <span>⚡</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Инициализация Telegram WebApp API
+    let tg = window.Telegram ? window.Telegram.WebApp : null;
+    if (tg) {
+      tg.expand();
+      tg.ready();
+    }
+
+    // Твои реальные 4 позиции с ценами и сочными картинками
+    const menuData = [
+      {
+        id: 54,
+        name: "Burger Big",
+        price: 395,
+        desc: "Подвійна порція смаку для справжніх гурманів! Дві соковиті котлети з яловичини, хрусткий бекон, свіжі томати, листя салату та розплавлений сир Чеддер.",
+        image: "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/e64604c7-4e41-4bfd-810e-734aadf8bd03_image.png"
+      },
+      {
+        id: 55,
+        name: "Burger Jack",
+        price: 298,
+        desc: "Глибокий, насичений смак! Повітряна булочка бріош, фірмовий соус Jack Daniel's, хрустка цибуля та карамелізований бекон.",
+        image: "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/10ffa961-88af-4d02-b9fb-ecbbd49f96e2_image.png"
+      },
+      {
+        id: 56,
+        name: "Burger Black (spicy)",
+        price: 265,
+        desc: "Справжній вибух смаку! Фірмова чорна булочка, гострий соус халапеньо, свіжі овочі та розплавлений Чеддер для справжньої гостроти.",
+        image: "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/b7446fd4-5bca-4d12-ae33-3102784b93a2_image.jpeg"
+      },
+      {
+        id: 30,
+        name: "Burger Classic",
+        price: 248,
+        desc: "Ніжний та насичений! Повітряна булочка бріош, класична соковита котлета з індички, соус тар-тар та свіжий лист салату.",
+        image: "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/fff41153-4f5a-44e5-bfd9-01f16f089fef_image.png"
+      }
+    ];
+
+    let cart = {};
+
+    // Отрисовка меню
+    function renderMenu() {
+      const grid = document.getElementById('menu-grid');
+      grid.innerHTML = '';
+
+      menuData.forEach(item => {
+        const count = cart[item.id] || 0;
+        
+        const card = document.createElement('div');
+        card.className = 'bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md flex flex-col';
+        card.innerHTML = `
+          <div class="relative w-full aspect-[4/3] bg-zinc-950 flex items-center justify-center overflow-hidden">
+            <img 
+              src="${item.image}" 
+              alt="${item.name}" 
+              class="object-contain w-full h-full p-2 transition-transform duration-500 hover:scale-105"
+              onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%2318181b%22/><text x=%2250%25%22 y=%2250%25%22 font-size=%2240%22 text-anchor=%22middle%22 dy=%22.3em%22>🍔</text></svg>'"
+            />
+          </div>
+
+          <div class="p-4 flex-1 flex flex-col justify-between">
+            <div class="space-y-1">
+              <div class="flex justify-between items-start gap-2">
+                <h2 class="font-bold text-base text-gray-100 leading-tight">${item.name}</h2>
+                <span class="text-sm font-black text-amber-500 whitespace-nowrap">${item.price} ₴</span>
+              </div>
+              <p class="text-[11px] text-zinc-400 leading-relaxed">${item.desc}</p>
             </div>
-        `).join('');
-    </script>
+
+            <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between">
+              <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Ціна за одиницю</span>
+              
+              <div class="flex items-center">
+                ${count === 0 ? `
+                  <button onclick="addToCart(${item.id})" class="tg-button hover:bg-amber-400 active:scale-95 transition-all text-zinc-950 font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/10">
+                    <span>Додати</span>
+                    <span class="text-sm font-extrabold">+</span>
+                  </button>
+                ` : `
+                  <div class="bg-zinc-800 border border-zinc-700 rounded-xl flex items-center p-1 overflow-hidden">
+                    <button onclick="removeFromCart(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-zinc-700 active:scale-90 transition font-black text-sm">-</button>
+                    <span class="px-3 text-xs font-bold text-gray-200 min-w-[28px] text-center">${count}</span>
+                    <button onclick="addToCart(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-amber-500 hover:bg-zinc-700 active:scale-90 transition font-black text-sm">+</button>
+                  </div>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      updateCartUI();
+    }
+
+    function addToCart(id) {
+      const item = menuData.find(m => m.id == id);
+      if (!item) return;
+      cart[id] = (cart[id] || 0) + 1;
+      renderMenu();
+    }
+
+    function removeFromCart(id) {
+      if (cart[id] && cart[id] > 0) {
+        cart[id]--;
+        if (cart[id] === 0) {
+          delete cart[id];
+        }
+      }
+      renderMenu();
+    }
+
+    // Пересчет корзины
+    function updateCartUI() {
+      let totalCount = 0;
+      let totalPrice = 0;
+
+      Object.keys(cart).forEach(id => {
+        const item = menuData.find(m => m.id == id);
+        if (item) {
+          totalCount += cart[id];
+          totalPrice += item.price * cart[id];
+        }
+      });
+
+      const cartBtn = document.getElementById('cart-button');
+      const cartCountSpan = document.getElementById('cart-count');
+      const cartTotalSpan = document.getElementById('cart-total');
+
+      if (totalCount > 0) {
+        cartBtn.classList.remove('hidden');
+        cartCountSpan.innerText = totalCount;
+        cartTotalSpan.innerText = `${totalPrice} ₴`;
+      } else {
+        cartBtn.classList.add('hidden');
+        document.getElementById('cart-drawer').classList.add('translate-y-full');
+      }
+
+      document.getElementById('drawer-total').innerText = `${totalPrice} ₴`;
+    }
+
+    function toggleCart() {
+      const drawer = document.getElementById('cart-drawer');
+      const isClosed = drawer.classList.contains('translate-y-full');
+      
+      if (isClosed) {
+        renderCartItems();
+        drawer.classList.remove('translate-y-full');
+      } else {
+        drawer.classList.add('translate-y-full');
+      }
+    }
+
+    document.getElementById('cart-button').addEventListener('click', toggleCart);
+
+    function renderCartItems() {
+      const container = document.getElementById('cart-items-container');
+      container.innerHTML = '';
+
+      let hasItems = false;
+      Object.keys(cart).forEach(id => {
+        const item = menuData.find(m => m.id == id);
+        const count = cart[id];
+        if (item && count > 0) {
+          hasItems = true;
+          const element = document.createElement('div');
+          element.className = 'flex items-center justify-between py-2 border-b border-zinc-800 last:border-0';
+          element.innerHTML = `
+            <div class="flex items-center gap-3">
+              <img src="${item.image}" alt="${item.name}" class="w-10 h-10 object-contain bg-zinc-950 rounded-lg p-1 border border-zinc-800">
+              <div>
+                <h4 class="text-xs font-bold text-gray-200">${item.name}</h4>
+                <p class="text-[10px] text-zinc-500">${item.price} ₴ / шт</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="bg-zinc-800 border border-zinc-700 rounded-lg flex items-center p-0.5">
+                <button onclick="removeFromCart(${item.id}); renderCartItems();" class="w-6 h-6 flex items-center justify-center text-red-400 font-bold text-xs">-</button>
+                <span class="px-2 text-xs font-bold text-gray-200 min-w-[18px] text-center">${count}</span>
+                <button onclick="addToCart(${item.id}); renderCartItems();" class="w-6 h-6 flex items-center justify-center text-amber-500 font-bold text-xs">+</button>
+              </div>
+              <span class="text-xs font-extrabold text-amber-500 min-w-[55px] text-right">${item.price * count} ₴</span>
+            </div>
+          `;
+          container.appendChild(element);
+        }
+      });
+
+      if (!hasItems) {
+        container.innerHTML = `<div class="text-center text-zinc-500 py-6 text-xs">Кошик порожній 😞</div>`;
+      }
+    }
+
+    // Отправка данных в бота Telegram
+    function sendOrderToPoster() {
+      const phoneInput = document.getElementById('cust-phone').value.trim();
+
+      if (!phoneInput) {
+        showValidationTip("Будь ласка, введіть ваш номер телефону для підтвердження.");
+        return;
+      }
+
+      let total = 0;
+      let items = [];
+      Object.keys(cart).forEach(id => {
+        const item = menuData.find(m => m.id == id);
+        if (item) {
+          total += item.price * cart[id];
+          items.push({
+            product_id: item.id,
+            name: item.name,
+            price: item.price,
+            count: cart[id]
+          });
+        }
+      });
+
+      const orderPayload = {
+        total_amount: total,
+        phone: phoneInput,
+        items: items,
+        user_id: tg?.initDataUnsafe?.user?.id || 0,
+        username: tg?.initDataUnsafe?.user?.username || 'Guest'
+      };
+
+      if (tg) {
+        tg.sendData(JSON.stringify(orderPayload));
+      } else {
+        console.log("Данные заказа:", orderPayload);
+        alert("Замовлення сформовано!");
+      }
+
+      cart = {};
+      renderMenu();
+    }
+
+    function showValidationTip(message) {
+      const existing = document.getElementById('val-tip');
+      if (existing) existing.remove();
+
+      const tip = document.createElement('div');
+      tip.id = 'val-tip';
+      tip.className = 'fixed top-16 left-4 right-4 bg-red-600 text-white font-semibold text-xs px-4 py-3 rounded-xl shadow-lg z-[60] text-center';
+      tip.innerText = message;
+      document.body.appendChild(tip);
+
+      setTimeout(() => {
+        tip.remove();
+      }, 3000);
+    }
+
+    window.onload = renderMenu;
+  </script>
 </body>
 </html>
