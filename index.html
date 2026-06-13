@@ -98,12 +98,19 @@
   </div>
 
   <script>
-    let tg = window.Telegram ? window.Telegram.WebApp : null;
-    if (tg) {
-      tg.expand();
-      tg.ready();
+    // Пробуем безопасно инициализировать Telegram WebApp SDK
+    let tg = null;
+    try {
+      if (window.Telegram && window.Telegram.WebApp) {
+        tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+      }
+    } catch (e) {
+      console.error("Помилка ініціалізації Telegram SDK:", e);
     }
 
+    // Исходная глобальная база данных меню
     const menuData = [
       {
         id: 54,
@@ -291,15 +298,32 @@
         }
       });
 
+      if (items.length === 0) {
+        showValidationTip("Кошик порожній!");
+        return;
+      }
+
+      // Безопасное чтение данных пользователя Telegram
+      let userId = 0;
+      let username = 'Guest';
+      try {
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+          userId = tg.initDataUnsafe.user.id || 0;
+          username = tg.initDataUnsafe.user.username || 'Guest';
+        }
+      } catch (e) {
+        console.warn("Не вдалося зчитати дані Telegram користувача:", e);
+      }
+
       const orderPayload = {
         total_amount: total,
         phone: phoneInput,
         items: items,
-        user_id: tg?.initDataUnsafe?.user?.id || 0,
-        username: tg?.initDataUnsafe?.user?.username || 'Guest'
+        user_id: userId,
+        username: username
       };
 
-      // Логируем для дебага
+      // Логируем для отладки
       console.log("Надсилання замовлення:", orderPayload);
 
       // Пробуем отправить в Telegram чат
@@ -310,16 +334,18 @@
           sentSuccessfully = true;
         }
       } catch (e) {
-        console.warn("Помилка tg.sendData:", e);
+        console.warn("tg.sendData недоступний або заблокований:", e);
       }
 
-      // Если прямая отправка не поддерживается клиентом (или заблокирована)
+      // Если tg.sendData заблокирован, ГАРАНТИРОВАННО выводим кастомный Alert!
       if (!sentSuccessfully) {
         alert(`🔔 Тестове замовлення сформовано!\n\nСума: ${total} ₴\nТелефон: ${phoneInput}\nКількість страв: ${items.length}\n\nДані успішно оброблені!`);
       }
 
+      // Сбрасываем корзину и закрываем шторку
       cart = {};
       renderMenu();
+      toggleCart();
     }
 
     function showValidationTip(message) {
