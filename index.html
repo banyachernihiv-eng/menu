@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Just Burger - Меню</title>
+  <!-- Подключение стилей Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Подключение Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Подключение шрифта Inter -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body {
@@ -14,6 +17,7 @@
     }
     .card-bg { background-color: #1e1e1e; }
     .tg-button { background-color: #ffcc00; color: #000000; }
+    /* Стильное скрытие скроллбара */
     ::-webkit-scrollbar {
       width: 4px;
     }
@@ -39,18 +43,18 @@
         <p class="text-[10px] text-zinc-400 uppercase tracking-widest">Premium Street Food</p>
       </div>
     </div>
-    <div class="bg-zinc-800 text-amber-500 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border border-zinc-700">
+    <div id="status-badge" class="bg-zinc-800 text-amber-500 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border border-zinc-700">
       <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-      Тест каси
+      Працюємо
     </div>
   </header>
 
-  <!-- Список бургерів -->
+  <!-- Список бургеров -->
   <main class="flex-1 overflow-y-auto px-4 py-4 pb-28 space-y-4">
     <div class="grid grid-cols-1 gap-4" id="menu-grid"></div>
   </main>
 
-  <!-- Кнопка кошика внизу -->
+  <!-- Кнопка корзины внизу -->
   <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent border-t border-zinc-900/40 z-30 pointer-events-none">
     <button id="cart-button" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg shadow-amber-500/20 transform active:scale-[0.98] pointer-events-auto hidden" onclick="toggleCart()">
       <div class="flex items-center gap-2">
@@ -61,7 +65,7 @@
     </button>
   </div>
 
-  <!-- Шторка кошика -->
+  <!-- Шторка корзины -->
   <div id="cart-drawer" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 transform translate-y-full transition-transform duration-300 ease-in-out flex flex-col justify-end">
     <div class="bg-zinc-900 rounded-t-3xl max-h-[90vh] flex flex-col border-t border-zinc-800">
       
@@ -79,17 +83,22 @@
 
       <div class="p-5 overflow-y-auto space-y-4 max-h-[40vh]" id="cart-items-container"></div>
 
+      <!-- Ввод телефона -->
       <div class="p-5 bg-zinc-950/40 border-t border-b border-zinc-800/60 space-y-3">
         <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Дані для відправки в касу</h3>
         <input type="tel" id="cust-phone" placeholder="Введіть ваш номер телефону" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition">
       </div>
 
+      <!-- Кнопка заказа с учетом рабочего времени -->
       <div class="p-5 space-y-4 bg-zinc-900">
+        <div id="working-hours-warning" class="hidden text-center bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-xs text-red-400 leading-normal">
+          🛑 <strong>Ми зачинені!</strong> Наша кухня приймає замовлення з 10:00 до 22:00. Зараз ви можете лише переглянути меню.
+        </div>
         <div class="flex justify-between items-center">
           <span class="text-zinc-400 text-sm">Всього до сплати:</span>
           <span class="text-xl font-black text-amber-500" id="drawer-total">0 ₴</span>
         </div>
-        <button onclick="sendOrderToPoster()" class="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-2xl transition duration-300 shadow-md flex items-center justify-center gap-2 active:scale-95">
+        <button id="submit-order-btn" onclick="sendOrderToPoster()" class="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-2xl transition duration-300 shadow-md flex items-center justify-center gap-2 active:scale-95">
           <span>Надіслати замовлення</span>
           <span>⚡</span>
         </button>
@@ -97,7 +106,7 @@
     </div>
   </div>
 
-  <!-- ВЛАСНЕ СТИЛЬНЕ ВІКНО УСПІХУ -->
+  <!-- Кастомное окно успеха -->
   <div id="custom-success-modal" class="fixed inset-0 bg-zinc-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 hidden">
     <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 max-w-sm w-full text-center space-y-5 shadow-2xl">
       <div class="w-16 h-16 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full flex items-center justify-center text-3xl mx-auto">
@@ -165,6 +174,45 @@
 
     let cart = {};
 
+    // Функция проверки рабочего времени по Киеву (10:00 - 22:00)
+    function checkKyivWorkingHours() {
+      try {
+        const now = new Date();
+        const options = { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit', hour12: false };
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const parts = formatter.formatToParts(now);
+        const hour = parseInt(parts.find(p => p.type === 'hour').value, 10);
+        
+        // Рабочее время с 10 до 22 (до 21:59)
+        return hour >= 10 && hour < 22;
+      } catch (e) {
+        console.error("Помилка розрахунку часу Києва: ", e);
+        return true; // Фолбек на случай сбоя парсера дат
+      }
+    }
+
+    // Обновление интерфейса на основе рабочего времени
+    function updateWorkingHoursUI() {
+      const isOpen = checkKyivWorkingHours();
+      const statusBadge = document.getElementById('status-badge');
+      const warningBlock = document.getElementById('working-hours-warning');
+      const submitBtn = document.getElementById('submit-order-btn');
+
+      if (isOpen) {
+        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>Працюємо`;
+        statusBadge.className = "bg-zinc-800 text-green-400 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border border-zinc-700";
+        warningBlock.classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.className = "w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-2xl transition duration-300 shadow-md flex items-center justify-center gap-2 active:scale-95 cursor-pointer";
+      } else {
+        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span>Зачинено`;
+        statusBadge.className = "bg-zinc-800 text-red-400 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border border-zinc-700";
+        warningBlock.classList.remove('hidden');
+        submitBtn.disabled = true;
+        submitBtn.className = "w-full bg-zinc-800 text-zinc-500 font-bold py-4 rounded-2xl cursor-not-allowed border border-zinc-700/50";
+      }
+    }
+
     function renderMenu() {
       try {
         const grid = document.getElementById('menu-grid');
@@ -208,6 +256,7 @@
           grid.appendChild(card);
         });
         updateCartUI();
+        updateWorkingHoursUI();
       } catch (e) {
         console.error("Помилка рендерингу меню: ", e);
       }
@@ -259,6 +308,7 @@
       const isClosed = drawer.classList.contains('translate-y-full');
       if (isClosed) {
         renderCartItems();
+        updateWorkingHoursUI();
         drawer.classList.remove('translate-y-full');
       } else {
         drawer.classList.add('translate-y-full');
@@ -303,6 +353,12 @@
 
     function sendOrderToPoster() {
       try {
+        // Проверка времени непосредственно перед отправкой заказа
+        if (!checkKyivWorkingHours()) {
+          showValidationTip("Вибачте, ми зачинені! Кухня працює з 10:00 до 22:00.");
+          return;
+        }
+
         const phoneInput = document.getElementById('cust-phone').value.trim();
         if (!phoneInput) {
           showValidationTip("Будь ласка, введіть ваш номер телефону.");
@@ -348,7 +404,7 @@
           username: username
         };
 
-        // Відправляємо дані назад у Telegram-бот
+        // Отправляем JSON обратно в Telegram бот
         let sentSuccessfully = false;
         try {
           if (tg && tg.sendData) {
@@ -359,7 +415,7 @@
           console.warn("tg.sendData заблоковано або недоступно:", e);
         }
 
-        // Відображаємо кастомне вікно успіху
+        // Отображаем кастомное окно успеха
         const modalPhone = document.getElementById('modal-phone-val');
         const modalTotal = document.getElementById('modal-total-val');
         const modalText = document.getElementById('modal-success-text');
@@ -377,7 +433,7 @@
           modal.classList.remove('hidden');
         }
 
-        // Очищаємо кошик і закриваємо шторку
+        // Очищаем корзину и закрываем шторку
         cart = {};
         renderMenu();
         
@@ -395,7 +451,7 @@
       document.getElementById('custom-success-modal').classList.add('hidden');
       if (tg) {
         try {
-          tg.close(); // Закриваємо Web App після ознайомлення
+          tg.close(); // Закрываем Web App после успешного прогона
         } catch (e) {
           console.warn("Не вдалося закрити Web App:", e);
         }
@@ -415,7 +471,11 @@
       setTimeout(() => { tip.remove(); }, 3000);
     }
 
-    window.onload = renderMenu;
+    window.onload = function() {
+      renderMenu();
+      // Запускаем автоматический опрос времени каждую минуту
+      setInterval(updateWorkingHoursUI, 60000);
+    };
   </script>
 </body>
 </html>
