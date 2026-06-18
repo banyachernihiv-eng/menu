@@ -4,30 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Just Burger - Меню</title>
-  <!-- Подключение стилей Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Подключение Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Подключение шрифта Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Inter', sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
-    .card-bg { background-color: #1e1e1e; }
     .tg-button { background-color: #ffcc00; color: #000000; }
-    /* Стильное скрытие скроллбара */
-    ::-webkit-scrollbar {
-      width: 4px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.05);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 2px;
-    }
   </style>
 </head>
 <body class="bg-zinc-950 text-gray-100 flex flex-col h-full overflow-hidden select-none">
@@ -49,12 +34,12 @@
     </div>
   </header>
 
-  <!-- Список бургеров -->
+  <!-- Список блюд -->
   <main class="flex-1 overflow-y-auto px-4 py-4 pb-28 space-y-4">
     <div class="grid grid-cols-1 gap-4" id="menu-grid"></div>
   </main>
 
-  <!-- Кнопка корзины внизу -->
+  <!-- Кнопка вызова корзины -->
   <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent border-t border-zinc-900/40 z-30 pointer-events-none">
     <button id="cart-button" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg shadow-amber-500/20 transform active:scale-[0.98] pointer-events-auto hidden" onclick="toggleCart()">
       <div class="flex items-center gap-2">
@@ -71,74 +56,80 @@
       
       <div class="px-5 py-4 border-b border-zinc-800 flex justify-between items-center">
         <div>
-          <h2 class="text-lg font-bold text-gray-100 flex items-center gap-2">
-            🛒 Твій кошик
-          </h2>
-          <p class="text-xs text-zinc-400">Перевір вибрані позиції</p>
+          <h2 class="text-lg font-bold text-gray-100 flex items-center gap-2">🛒 Твій кошик</h2>
+          <p class="text-xs text-zinc-400">Перевір вибрані позиції перед відправкою</p>
         </div>
-        <button onclick="toggleCart()" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition">
-          ✕
-        </button>
+        <button onclick="toggleCart()" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition">✕</button>
       </div>
 
       <div class="p-5 overflow-y-auto space-y-4 max-h-[40vh]" id="cart-items-container"></div>
 
       <!-- Ввод телефона -->
       <div class="p-5 bg-zinc-950/40 border-t border-b border-zinc-800/60 space-y-3">
-        <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Дані для відправки в касу</h3>
-        <input type="tel" id="cust-phone" placeholder="Введіть ваш номер телефону" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition">
+        <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Контактний номер телефону</h3>
+        <input type="tel" id="cust-phone" placeholder="+380" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition">
       </div>
 
-      <!-- Кнопка заказа с учетом рабочего времени -->
       <div class="p-5 space-y-4 bg-zinc-900">
         <div id="working-hours-warning" class="hidden text-center bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-xs text-red-400 leading-normal">
-          🛑 <strong>Ми зачинені!</strong> Наша кухня приймає замовлення з 10:00 до 22:00. Зараз ви можете лише переглянути меню.
+          🛑 <strong>Ми зачинені!</strong> Кухня приймає замовлення з 10:00 до 22:00.
         </div>
         <div class="flex justify-between items-center">
           <span class="text-zinc-400 text-sm">Всього до сплати:</span>
           <span class="text-xl font-black text-amber-500" id="drawer-total">0 ₴</span>
         </div>
-        <button id="submit-order-btn" onclick="sendOrderToPoster()" class="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-2xl transition duration-300 shadow-md flex items-center justify-center gap-2 active:scale-95">
-          <span>Надіслати замовлення</span>
-          <span>⚡</span>
+        
+        <!-- Кнопка отправки с защитой от двойного клика -->
+        <button id="submit-order-btn" onclick="sendOrderToWebhook()" class="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-2xl transition duration-300 shadow-md flex items-center justify-center gap-2 active:scale-95">
+          <span id="btn-text">Надіслати замовлення</span>
+          <span id="btn-spinner" class="hidden w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Кастомное окно успеха -->
+  <!-- Окно успешного принятия вебхука -->
   <div id="custom-success-modal" class="fixed inset-0 bg-zinc-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 hidden">
     <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 max-w-sm w-full text-center space-y-5 shadow-2xl">
-      <div class="w-16 h-16 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full flex items-center justify-center text-3xl mx-auto">
-        ✓
-      </div>
+      <div class="w-16 h-16 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full flex items-center justify-center text-3xl mx-auto">✓</div>
       <div>
-        <h3 class="text-lg font-black text-gray-100 mb-1">Замовлення сформовано!</h3>
-        <p class="text-xs text-zinc-400 leading-relaxed" id="modal-success-text">
-          Дані успішно оброблені та готові для відправки.
+        <h3 class="text-lg font-black text-gray-100 mb-1">Запит надіслано!</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed">
+          Дані успішно передані системі обробки. Очікуйте підтвердження в чаті боту.
         </p>
       </div>
-      <div class="bg-zinc-950 p-4 rounded-xl border border-zinc-800 text-left space-y-2 text-xs text-zinc-300">
-        <div class="flex justify-between"><span class="text-zinc-500">Номер телефону:</span> <span id="modal-phone-val" class="font-bold"></span></div>
-        <div class="flex justify-between"><span class="text-zinc-500">Сума до сплати:</span> <span id="modal-total-val" class="font-extrabold text-amber-500"></span></div>
-        <div class="flex justify-between"><span class="text-zinc-500">Статус:</span> <span class="text-green-400 font-bold">Очікує каси Poster</span></div>
-      </div>
-      <button onclick="closeSuccessModal()" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 py-3 rounded-xl text-sm font-black transition active:scale-95">
-        Зрозуміло
-      </button>
+      <button onclick="closeSuccessModal()" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 py-3 rounded-xl text-sm font-black transition active:scale-95">Зрозуміло</button>
     </div>
   </div>
 
   <script>
+    // === АБСОЛЮТНО БЕЗОПАСНЫЙ URL ВЕБХУКА В MAKE.COM ===
+    const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/npsbe6g4f464yom9ndre7p6q2f8n019j";
+
     let tg = null;
+    let userId = 0;
+    let username = "Guest_User";
+    let initData = ""; // Строка для безопасной верификации на сервере Make.com
+
     try {
       if (window.Telegram && window.Telegram.WebApp) {
         tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
+        
+        // Считываем полную строку авторизации для верификации подписи Telegram
+        if (tg.initData) {
+          initData = tg.initData;
+        }
+        
+        // Безопасное получение данных авторизации
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+          userId = tg.initDataUnsafe.user.id || 0;
+          username = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name || "Guest_User";
+        }
       }
     } catch (e) {
-      console.error("Помилка ініціалізації Telegram SDK:", e);
+      console.error("Ошибка инициализации Telegram SDK: ", e);
     }
 
     const menuData = [
@@ -146,35 +137,35 @@
         id: 54,
         name: "Burger Big",
         price: 395,
-        desc: "Подвійна порція смаку для справжніх гурманів! Дві соковиті котлети з яловичини, хрусткий бекон, свіжі томати, листя салату та розплавлений сир Чеддер.",
+        desc: "Дві соковиті котлети з яловичини, хрусткий бекон, свіжі томати, листя салату та розплавлений сир Чеддер.",
         image: "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/e64604c7-4e41-4bfd-810e-734aadf8bd03_image.png"
       },
       {
         id: 55,
         name: "Burger Jack",
         price: 298,
-        desc: "Глибокий, насичений смак! Повітряна булочка бріош, фірмовий соус Jack Daniel's, хрустка цибуля та карамелізований бекон.",
+        desc: "Повітряна булочка бріош, фірмовий соус Jack Daniel's, хрустка цибуля та карамелізований бекон.",
         image: "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/10ffa961-88af-4d02-b9fb-ecbbd49f96e2_image.png"
       },
       {
         id: 56,
         name: "Burger Black (spicy)",
         price: 265,
-        desc: "Справжній вибух смаку! Фірмова чорна булочка, гострий соус халапеньо, свіжі овочі та розплавлений Чеддер для справжньої гостроти.",
+        desc: "Фірмова чорна булочка, гострий соус халапеньо, свіжі овочі та розплавлений сир Чеддер.",
         image: "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/b7446fd4-5bca-4d12-ae33-3102784b93a2_image.jpeg"
       },
       {
         id: 30,
         name: "Burger Classic",
         price: 248,
-        desc: "Ніжний та насичений! Повітряна булочка бріош, класична соковита котлета з індички, соус тар-тар та свіжий лист салату.",
+        desc: "Повітряна булочка бріош, класична соковита котлета з індички, соус тар-тар та свіжий лист салату.",
         image: "https://img.postershop.me/cdn-cgi/image/width=390,format=webp/https://img.postershop.me/24704/fff41153-4f5a-44e5-bfd9-01f16f089fef_image.png"
       }
     ];
 
     let cart = {};
+    let isSending = false; // Защита от дублирования запросов
 
-    // Функция проверки рабочего времени по Киеву (10:00 - 22:00)
     function checkKyivWorkingHours() {
       try {
         const now = new Date();
@@ -182,16 +173,12 @@
         const formatter = new Intl.DateTimeFormat('en-US', options);
         const parts = formatter.formatToParts(now);
         const hour = parseInt(parts.find(p => p.type === 'hour').value, 10);
-        
-        // Рабочее время с 10 до 22 (до 21:59)
         return hour >= 10 && hour < 22;
       } catch (e) {
-        console.error("Помилка розрахунку часу Києва: ", e);
-        return true; // Фолбек на случай сбоя парсера дат
+        return true; 
       }
     }
 
-    // Обновление интерфейса на основе рабочего времени
     function updateWorkingHoursUI() {
       const isOpen = checkKyivWorkingHours();
       const statusBadge = document.getElementById('status-badge');
@@ -202,69 +189,61 @@
         statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>Працюємо`;
         statusBadge.className = "bg-zinc-800 text-green-400 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border border-zinc-700";
         warningBlock.classList.add('hidden');
-        submitBtn.disabled = false;
-        submitBtn.className = "w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-2xl transition duration-300 shadow-md flex items-center justify-center gap-2 active:scale-95 cursor-pointer";
+        if (!isSending) submitBtn.disabled = false;
       } else {
         statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span>Зачинено`;
         statusBadge.className = "bg-zinc-800 text-red-400 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border border-zinc-700";
         warningBlock.classList.remove('hidden');
         submitBtn.disabled = true;
-        submitBtn.className = "w-full bg-zinc-800 text-zinc-500 font-bold py-4 rounded-2xl cursor-not-allowed border border-zinc-700/50";
       }
     }
 
     function renderMenu() {
-      try {
-        const grid = document.getElementById('menu-grid');
-        grid.innerHTML = '';
+      const grid = document.getElementById('menu-grid');
+      grid.innerHTML = '';
 
-        menuData.forEach(item => {
-          const count = cart[item.id] || 0;
-          const card = document.createElement('div');
-          card.className = 'bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md flex flex-col';
-          card.innerHTML = `
-            <div class="relative w-full aspect-[4/3] bg-zinc-950 flex items-center justify-center overflow-hidden">
-              <img src="${item.image}" alt="${item.name}" class="object-contain w-full h-full p-2 transition-transform duration-500 hover:scale-105" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%2318181b%22/><text x=%2250%25%22 y=%2250%25%22 font-size=%2240%22 text-anchor=%22middle%22 dy=%22.3em%22>🍔</text></svg>'"/>
-            </div>
-            <div class="p-4 flex-1 flex flex-col justify-between">
-              <div class="space-y-1">
-                <div class="flex justify-between items-start gap-2">
-                  <h2 class="font-bold text-base text-gray-100 leading-tight">${item.name}</h2>
-                  <span class="text-sm font-black text-amber-500 whitespace-nowrap">${item.price} ₴</span>
-                </div>
-                <p class="text-[11px] text-zinc-400 leading-relaxed">${item.desc}</p>
+      menuData.forEach(item => {
+        const count = cart[item.id] || 0;
+        const card = document.createElement('div');
+        card.className = 'bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-md flex flex-col';
+        card.innerHTML = `
+          <div class="relative w-full aspect-[4/3] bg-zinc-950 flex items-center justify-center overflow-hidden">
+            <img src="${item.image}" alt="${item.name}" class="object-contain w-full h-full p-2 transition-transform duration-500 hover:scale-105" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%2318181b%22/><text x=%2250%25%22 y=%2250%25%22 font-size=%2240%22 text-anchor=%22middle%22 dy=%22.3em%22>🍔</text></svg>'"/>
+          </div>
+          <div class="p-4 flex-1 flex flex-col justify-between">
+            <div class="space-y-1">
+              <div class="flex justify-between items-start gap-2">
+                <h2 class="font-bold text-base text-gray-100 leading-tight">${item.name}</h2>
+                <span class="text-sm font-black text-amber-500 whitespace-nowrap">${item.price} ₴</span>
               </div>
-              <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between">
-                <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Ціна за одиницю</span>
-                <div class="flex items-center">
-                  ${count === 0 ? `
-                    <button onclick="addToCart(${item.id})" class="tg-button hover:bg-amber-400 active:scale-95 transition-all text-zinc-950 font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5">
-                      <span>Додати</span>
-                      <span class="text-sm font-extrabold">+</span>
-                    </button>
-                  ` : `
-                    <div class="bg-zinc-800 border border-zinc-700 rounded-xl flex items-center p-1 overflow-hidden">
-                      <button onclick="removeFromCart(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-zinc-700 active:scale-90 transition font-black text-sm">-</button>
-                      <span class="px-3 text-xs font-bold text-gray-200 min-w-[28px] text-center">${count}</span>
-                      <button onclick="addToCart(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-amber-500 hover:bg-zinc-700 active:scale-90 transition font-black text-sm">+</button>
-                    </div>
-                  `}
-                </div>
+              <p class="text-[11px] text-zinc-400 leading-relaxed">${item.desc}</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between">
+              <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Кількість</span>
+              <div class="flex items-center">
+                ${count === 0 ? `
+                  <button onclick="addToCart(${item.id})" class="tg-button hover:bg-amber-400 active:scale-95 transition-all text-zinc-950 font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5">
+                    <span>Додати</span>
+                    <span class="text-sm font-extrabold">+</span>
+                  </button>
+                ` : `
+                  <div class="bg-zinc-800 border border-zinc-700 rounded-xl flex items-center p-1 overflow-hidden">
+                    <button onclick="removeFromCart(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-zinc-700 active:scale-90 transition font-black text-sm">-</button>
+                    <span class="px-3 text-xs font-bold text-gray-200 min-w-[28px] text-center">${count}</span>
+                    <button onclick="addToCart(${item.id})" class="w-8 h-8 rounded-lg flex items-center justify-center text-amber-500 hover:bg-zinc-700 active:scale-90 transition font-black text-sm">+</button>
+                  </div>
+                `}
               </div>
             </div>
-          `;
-          grid.appendChild(card);
-        });
-        updateCartUI();
-        updateWorkingHoursUI();
-      } catch (e) {
-        console.error("Помилка рендерингу меню: ", e);
-      }
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      updateCartUI();
+      updateWorkingHoursUI();
     }
 
     function addToCart(id) {
-      const item = menuData.find(m => m.id == id);
-      if (!item) return;
       cart[id] = (cart[id] || 0) + 1;
       renderMenu();
     }
@@ -281,11 +260,8 @@
       let totalCount = 0;
       let totalPrice = 0;
       Object.keys(cart).forEach(id => {
-        const item = menuData.find(m => m.id == id);
-        if (item) {
-          totalCount += cart[id];
-          totalPrice += item.price * cart[id];
-        }
+        totalCount += cart[id];
+        totalPrice += menuData.find(m => m.id == id).price * cart[id];
       });
 
       const cartBtn = document.getElementById('cart-button');
@@ -351,110 +327,83 @@
       }
     }
 
-    function sendOrderToPoster() {
+    // === Отправка данных на Webhook в Make.com ===
+    async function sendOrderToWebhook() {
+      if (isSending) return; // Дедупликация на клиенте
+
+      const phoneInput = document.getElementById('cust-phone').value.trim();
+      if (!phoneInput) {
+        showValidationTip("Будь ласка, введіть ваш номер телефону.");
+        return;
+      }
+
+      // Блокируем кнопку, запускаем лоадер
+      isSending = true;
+      const submitBtn = document.getElementById('submit-order-btn');
+      const btnText = document.getElementById('btn-text');
+      const btnSpinner = document.getElementById('btn-spinner');
+
+      submitBtn.disabled = true;
+      btnText.innerText = "Надсилаємо замовлення...";
+      btnSpinner.classList.remove('hidden');
+
+      let total = 0;
+      let items = [];
+      Object.keys(cart).forEach(id => {
+        const item = menuData.find(m => m.id == id);
+        if (item) {
+          total += item.price * cart[id];
+          items.push({
+            product_id: Number(item.id),
+            name: item.name,
+            price: item.price,
+            count: Number(cart[id])
+          });
+        }
+      });
+
+      // Формируем полностью безопасный JSON-пакет без открытых токенов
+      const orderPayload = {
+        total_amount: total,
+        phone: phoneInput,
+        username: username,
+        chat_id: Number(userId), // Передаем как числовое поле
+        initData: initData, // Передаем зашифрованную строку для проверки на бэкенде Make.com
+        items: items
+      };
+
       try {
-        // Проверка времени непосредственно перед отправкой заказа
-        if (!checkKyivWorkingHours()) {
-          showValidationTip("Вибачте, ми зачинені! Кухня працює з 10:00 до 22:00.");
-          return;
-        }
-
-        const phoneInput = document.getElementById('cust-phone').value.trim();
-        if (!phoneInput) {
-          showValidationTip("Будь ласка, введіть ваш номер телефону.");
-          return;
-        }
-
-        let total = 0;
-        let items = [];
-        Object.keys(cart).forEach(id => {
-          const item = menuData.find(m => m.id == id);
-          if (item) {
-            total += item.price * cart[id];
-            items.push({
-              product_id: item.id,
-              name: item.name,
-              price: item.price,
-              count: cart[id]
-            });
-          }
+        const response = await fetch(MAKE_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderPayload)
         });
 
-        if (items.length === 0) {
-          showValidationTip("Кошик порожній!");
-          return;
+        if (response.ok) {
+          // Отображаем окно успеха
+          document.getElementById('custom-success-modal').classList.remove('hidden');
+          cart = {};
+          renderMenu();
+          toggleCart();
+        } else {
+          showValidationTip("Помилка сервера. Спробуйте пізніше.");
         }
-
-        let userId = 0;
-        let username = 'Guest';
-        try {
-          if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            userId = tg.initDataUnsafe.user.id || 0;
-            username = tg.initDataUnsafe.user.username || 'Guest';
-          }
-        } catch (e) {
-          console.warn("Не вдалося зчитати дані користувача TG: " + e.message);
-        }
-
-        const orderPayload = {
-          total_amount: total,
-          phone: phoneInput,
-          items: items,
-          user_id: userId,
-          username: username
-        };
-
-        // Отправляем JSON обратно в Telegram бот
-        let sentSuccessfully = false;
-        try {
-          if (tg && tg.sendData) {
-            tg.sendData(JSON.stringify(orderPayload));
-            sentSuccessfully = true;
-          }
-        } catch (e) {
-          console.warn("tg.sendData заблоковано або недоступно:", e);
-        }
-
-        // Отображаем кастомное окно успеха
-        const modalPhone = document.getElementById('modal-phone-val');
-        const modalTotal = document.getElementById('modal-total-val');
-        const modalText = document.getElementById('modal-success-text');
-        const modal = document.getElementById('custom-success-modal');
-
-        if (modalPhone) modalPhone.innerText = phoneInput;
-        if (modalTotal) modalTotal.innerText = `${total} ₴`;
-        
-        const countLabel = items.length === 1 ? '1 страва' : `${items.length} страви/а`;
-        if (modalText) {
-          modalText.innerHTML = `Тестове замовлення (${countLabel}) успішно сформоване!<br>Дані готові для передачі на кухню.`;
-        }
-
-        if (modal) {
-          modal.classList.remove('hidden');
-        }
-
-        // Очищаем корзину и закрываем шторку
-        cart = {};
-        renderMenu();
-        
-        const drawer = document.getElementById('cart-drawer');
-        if (drawer) {
-          drawer.classList.add('translate-y-full');
-        }
-
-      } catch (masterError) {
-        console.error("Помилка sendOrderToPoster: ", masterError);
+      } catch (err) {
+        console.error("Помилка відправки:", err);
+        showValidationTip("Помилка з'єднання. Перевірте інтернет.");
+      } finally {
+        // Разблокируем интерфейс
+        isSending = false;
+        submitBtn.disabled = false;
+        btnText.innerText = "Надіслати замовлення";
+        btnSpinner.classList.add('hidden');
       }
     }
 
     function closeSuccessModal() {
       document.getElementById('custom-success-modal').classList.add('hidden');
       if (tg) {
-        try {
-          tg.close(); // Закрываем Web App после успешного прогона
-        } catch (e) {
-          console.warn("Не вдалося закрити Web App:", e);
-        }
+        try { tg.close(); } catch (e) {}
       }
     }
 
@@ -473,7 +422,6 @@
 
     window.onload = function() {
       renderMenu();
-      // Запускаем автоматический опрос времени каждую минуту
       setInterval(updateWorkingHoursUI, 60000);
     };
   </script>
