@@ -6,7 +6,7 @@
   <title>Just Burger - Меню</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -97,8 +97,9 @@
 
   <script>
     // === URL ВЕБХУКА В MAKE.COM ===
-    const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/p6v283ihxxjq32g42sxpnbzehmepfv3a";
+    const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/4q13p7mmo4cp0vbmap88up5hicetcuxd";
 
+    // === ИНИЦИАЛИЗАЦИЯ TELEGRAM ===
     let tg = null;
     let userId = 0;
     let username = "Guest_User";
@@ -110,9 +111,8 @@
         tg.expand();
         tg.ready();
         
-        if (tg.initData) {
-          initData = tg.initData;
-        }
+        // Явно проверяем наличие initData
+        initData = tg.initData || '';
         
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
           userId = tg.initDataUnsafe.user.id || 0;
@@ -121,8 +121,10 @@
       }
     } catch (e) {
       console.error("Error initializing Telegram WebApp SDK: ", e);
+      initData = '';
     }
 
+    // === ДАННЫЕ МЕНЮ ===
     const menuData = [
       {
         id: 54,
@@ -154,9 +156,11 @@
       }
     ];
 
+    // === СОСТОЯНИЕ ===
     let cart = {};
     let isSending = false;
 
+    // === РАБОЧЕЕ ВРЕМЯ ===
     function checkKyivWorkingHours() {
       try {
         const now = new Date();
@@ -189,6 +193,7 @@
       }
     }
 
+    // === ОТРИСОВКА МЕНЮ ===
     function renderMenu() {
       const grid = document.getElementById('menu-grid');
       grid.innerHTML = '';
@@ -234,6 +239,7 @@
       updateWorkingHoursUI();
     }
 
+    // === УПРАВЛЕНИЕ КОРЗИНОЙ ===
     function addToCart(id) {
       cart[id] = (cart[id] || 0) + 1;
       renderMenu();
@@ -318,6 +324,7 @@
       }
     }
 
+    // === ОТПРАВКА ЗАКАЗА В MAKE.COM ===
     async function sendOrderToWebhook() {
       if (isSending) return;
 
@@ -351,21 +358,29 @@
         }
       });
 
+      // === ФОРМИРУЕМ PAYLOAD С ПРОВЕРКАМИ ===
       const orderPayload = {
         total_amount: total,
         phone: phoneInput,
         username: username,
-        chat_id: Number(userId),
-        initData: initData,
+        chat_id: userId ? Number(userId) : null,  // Если userId = 0, отправляем null
+        initData: initData || '',  // Гарантируем, что строка
         items: items
       };
+
+      // === ОТПРАВКА С ТАЙМАУТОМ ===
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       try {
         const response = await fetch(MAKE_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(orderPayload)
+          body: JSON.stringify(orderPayload),
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           document.getElementById('custom-success-modal').classList.remove('hidden');
@@ -373,11 +388,18 @@
           renderMenu();
           toggleCart();
         } else {
+          const errorText = await response.text();
+          console.error("Server error:", errorText);
           showValidationTip("Помилка сервера. Спробуйте пізніше.");
         }
       } catch (err) {
-        console.error("Error sending order:", err);
-        showValidationTip("Помилка з'єднання. Перевірте інтернет.");
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+          showValidationTip("Сервер не відповідає. Спробуйте ще раз.");
+        } else {
+          console.error("Network error:", err);
+          showValidationTip("Помилка з'єднання. Перевірте інтернет.");
+        }
       } finally {
         isSending = false;
         submitBtn.disabled = false;
@@ -386,6 +408,7 @@
       }
     }
 
+    // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
     function closeSuccessModal() {
       document.getElementById('custom-success-modal').classList.add('hidden');
       if (tg) {
@@ -406,6 +429,7 @@
       setTimeout(() => { tip.remove(); }, 3000);
     }
 
+    // === ЗАПУСК ===
     window.onload = function() {
       renderMenu();
       setInterval(updateWorkingHoursUI, 60000);
