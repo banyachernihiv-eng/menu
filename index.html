@@ -17,7 +17,6 @@
 </head>
 <body class="bg-zinc-950 text-gray-100 flex flex-col h-full overflow-hidden select-none">
 
-  <!-- Шапка меню -->
   <header class="bg-zinc-900 border-b border-zinc-800 px-4 py-4 flex items-center justify-between sticky top-0 z-40 shrink-0">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500 font-bold text-xl">
@@ -34,12 +33,10 @@
     </div>
   </header>
 
-  <!-- Список блюд -->
   <main class="flex-1 overflow-y-auto px-4 py-4 pb-28 space-y-4">
     <div class="grid grid-cols-1 gap-4" id="menu-grid"></div>
   </main>
 
-  <!-- Кнопка вызова корзины -->
   <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent border-t border-zinc-900/40 z-30 pointer-events-none">
     <button id="cart-button" class="w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-4 px-6 rounded-2xl transition-all duration-300 flex items-center justify-between shadow-lg shadow-amber-500/20 transform active:scale-[0.98] pointer-events-auto hidden" onclick="toggleCart()">
       <div class="flex items-center gap-2">
@@ -50,7 +47,6 @@
     </button>
   </div>
 
-  <!-- Шторка корзины -->
   <div id="cart-drawer" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 transform translate-y-full transition-transform duration-300 ease-in-out flex flex-col justify-end">
     <div class="bg-zinc-900 rounded-t-3xl max-h-[90vh] flex flex-col border-t border-zinc-800">
       
@@ -64,7 +60,6 @@
 
       <div class="p-5 overflow-y-auto space-y-4 max-h-[40vh]" id="cart-items-container"></div>
 
-      <!-- Ввод телефона -->
       <div class="p-5 bg-zinc-950/40 border-t border-b border-zinc-800/60 space-y-3">
         <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Контактний номер телефону</h3>
         <input type="tel" id="cust-phone" placeholder="+380" class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition">
@@ -79,7 +74,6 @@
           <span class="text-xl font-black text-amber-500" id="drawer-total">0 ₴</span>
         </div>
         
-        <!-- Кнопка отправки с защитой от двойного клика -->
         <button id="submit-order-btn" onclick="sendOrderToWebhook()" class="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-2xl transition duration-300 shadow-md flex items-center justify-center gap-2 active:scale-95">
           <span id="btn-text">Надіслати замовлення</span>
           <span id="btn-spinner" class="hidden w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -88,7 +82,6 @@
     </div>
   </div>
 
-  <!-- Окно успешного принятия вебхука -->
   <div id="custom-success-modal" class="fixed inset-0 bg-zinc-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 hidden">
     <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 max-w-sm w-full text-center space-y-5 shadow-2xl">
       <div class="w-16 h-16 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full flex items-center justify-center text-3xl mx-auto">✓</div>
@@ -103,13 +96,13 @@
   </div>
 
   <script>
-    // === АБСОЛЮТНО БЕЗОПАСНЫЙ URL ВЕБХУКА В MAKE.COM ===
-    const MAKE_WEBHOOK_URL = "4q13p7mmo4cp0vbmap88up5hicetcuxd@hook.eu1.make.com";
+    // === URL ВЕБХУКА В MAKE.COM ===
+    const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/4q13p7mmo4cp0vbmap88up5hicetcuxd";
 
     let tg = null;
     let userId = 0;
     let username = "Guest_User";
-    let initData = ""; // Строка для безопасной верификации на сервере Make.com
+    let initData = "";
 
     try {
       if (window.Telegram && window.Telegram.WebApp) {
@@ -117,19 +110,17 @@
         tg.expand();
         tg.ready();
         
-        // Считываем полную строку авторизации для верификации подписи Telegram
         if (tg.initData) {
           initData = tg.initData;
         }
         
-        // Безопасное получение данных авторизации
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
           userId = tg.initDataUnsafe.user.id || 0;
           username = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name || "Guest_User";
         }
       }
     } catch (e) {
-      console.error("Ошибка инициализации Telegram SDK: ", e);
+      console.error("Error initializing Telegram WebApp SDK: ", e);
     }
 
     const menuData = [
@@ -164,7 +155,7 @@
     ];
 
     let cart = {};
-    let isSending = false; // Защита от дублирования запросов
+    let isSending = false;
 
     function checkKyivWorkingHours() {
       try {
@@ -327,17 +318,15 @@
       }
     }
 
-    // === Отправка данных на Webhook в Make.com ===
     async function sendOrderToWebhook() {
-      if (isSending) return; // Дедупликация на клиенте
+      if (isSending) return;
 
       const phoneInput = document.getElementById('cust-phone').value.trim();
       if (!phoneInput) {
-        showValidationTip("Будь ласка, введіть ваш номер телефону.");
+        showValidationTip("Будь ласка, введіть ваш номер telefonu.");
         return;
       }
 
-      // Блокируем кнопку, запускаем лоадер
       isSending = true;
       const submitBtn = document.getElementById('submit-order-btn');
       const btnText = document.getElementById('btn-text');
@@ -362,13 +351,12 @@
         }
       });
 
-      // Формируем полностью безопасный JSON-пакет без открытых токенов
       const orderPayload = {
         total_amount: total,
         phone: phoneInput,
         username: username,
-        chat_id: Number(userId), // Передаем как числовое поле
-        initData: initData, // Передаем зашифрованную строку для проверки на бэкенде Make.com
+        chat_id: Number(userId),
+        initData: initData,
         items: items
       };
 
@@ -380,7 +368,6 @@
         });
 
         if (response.ok) {
-          // Отображаем окно успеха
           document.getElementById('custom-success-modal').classList.remove('hidden');
           cart = {};
           renderMenu();
@@ -389,10 +376,9 @@
           showValidationTip("Помилка сервера. Спробуйте пізніше.");
         }
       } catch (err) {
-        console.error("Помилка відправки:", err);
+        console.error("Error sending order:", err);
         showValidationTip("Помилка з'єднання. Перевірте інтернет.");
       } finally {
-        // Разблокируем интерфейс
         isSending = false;
         submitBtn.disabled = false;
         btnText.innerText = "Надіслати замовлення";
